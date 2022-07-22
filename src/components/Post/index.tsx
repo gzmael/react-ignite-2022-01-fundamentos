@@ -1,31 +1,64 @@
+import dayjs from "dayjs";
+import "dayjs/locale/pt-br";
+import relativeTime from "dayjs/plugin/relativeTime";
+import { nanoid } from "nanoid";
+import { LinkMarkdown, ParagraphMarkdown, Post } from '../../utils/posts';
+import { Link } from '../atoms/Link';
+import { Paragraph } from '../atoms/Paragraph';
 import { Avatar } from '../Avatar';
 import Comment from '../Comment';
 import styles from './Post.module.css';
 
-const Post = () => {
+dayjs.extend(relativeTime)
+
+interface PostProps {
+  post: Post
+}
+
+interface MarkdownProps {
+  item: ParagraphMarkdown | LinkMarkdown
+}
+
+const MarkdownItem = ({ item }: MarkdownProps) => {
+  if(item.type === 'link') {
+    return <Link children={item.children} url={item.url} />
+  }
+
+  if(item.type === "paragraph") {
+    return <Paragraph children={item.children} />
+  }
+
+  return null;
+}
+
+const PostItem = ({ post }: PostProps) => {
+  
+  const publishedDateFormatted = dayjs(post.publishedAt)
+    .locale('pt-br')
+    .format('d [de] MMMM [às] HH:mm[h]')
+  
+  const publishedDateRelativeToNow = dayjs(post.publishedAt)
+    .locale('pt-br')
+    .fromNow()
+
   return (
     <article className={styles.post}>
       <header>
         <div className={styles.author}>
-          <Avatar src="https://github.com/diego3g.png" />
+          <Avatar src={post.author.avatarUrl} />
           <div className={styles.authorInfo}>
-            <strong>Diego Fernandes</strong>
-            <span>Web Developer</span>
+            <strong>{post.author.name}</strong>
+            <span>{post.author.rule}</span>
           </div>
         </div>
 
-        <time title="11 de Maio às 08:13h" dateTime="2022-05-11 08:13:00">Publicado há 1h</time>
+        <time title={publishedDateFormatted} dateTime={post.publishedAt.toUTCString()}>Publicado {publishedDateRelativeToNow}</time>
       </header>
 
       <div className={styles.content}>
-        <p>Fala galeraa 👋</p>
-        <p>Acabei de subir mais um projeto no meu portifa. É um projeto que fiz no NLW Return, evento da Rocketseat. O nome do projeto é DoctorCare 🚀</p>
-        <p><a href="">jane.design/doctorcare</a></p>
-        <p>
-          <a href="">#novoprojeto</a>{' '}
-          <a href="">#nlw</a>{' '}
-          <a href="">#rocketseat</a>
-        </p>
+        {post.content.map(item => (
+          <MarkdownItem item={item} key={nanoid()} />
+        ))}
       </div>
 
       <form className={styles.commentForm}>
@@ -48,4 +81,4 @@ const Post = () => {
     </article> 
   )
 }
-export default Post
+export default PostItem
